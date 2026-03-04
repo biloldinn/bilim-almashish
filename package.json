@@ -3,6 +3,7 @@
     "version": "1.0.0",
     "description": "AI-powered education platform",
     "main": "server/server.js",
+    "license": "MIT",
     "engines": {
         "node": ">=18.0.0"
     },
@@ -20,7 +21,8 @@
         "dotenv": "^16.3.1",
         "cors": "^2.8.5",
         "express-session": "^1.17.3",
-        "connect-mongo": "^5.0.0",
+        "connect-mongo": "^5.1.0",
+        "mongodb": "^6.3.0",
         "pdfkit": "^0.14.0"
     },
     "devDependencies": {
