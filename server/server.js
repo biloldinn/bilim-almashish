@@ -28,13 +28,15 @@ app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
 // Session configuration
+const sessionStore = process.env.MONGODB_URI ? MongoStore.create({
+    mongoUrl: process.env.MONGODB_URI
+}) : new session.MemoryStore();
+
 app.use(session({
     secret: process.env.SESSION_SECRET || 'secret',
     resave: false,
     saveUninitialized: false,
-    store: MongoStore.create({
-        mongoUrl: process.env.MONGODB_URI
-    })
+    store: sessionStore
 }));
 
 // Multer configuration for file uploads

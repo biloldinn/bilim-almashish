@@ -7,13 +7,18 @@
     <title>SkillSwap - Ro'yxatdan o'tish</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
+    <!-- Animated CSS -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 </head>
 
 <body class="auth-page">
-    <div class="auth-container">
+    <div class="auth-container animate__animated animate__fadeInUp">
         <div class="auth-header">
+            <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Bosh sahifa</a>
             <h2>Ro'yxatdan o'tish</h2>
-            <p>Yangi profil yaratish</p>
+            <p>Ta'lim bo'yicha imkoniyatlaringizni kengaytiring</p>
         </div>
 
         <form id="registerForm" enctype="multipart/form-data">
@@ -29,17 +34,25 @@
 
             <div class="form-group">
                 <label>Telefon raqam</label>
-                <input type="tel" id="phone" required placeholder="+998 90 123 45 67">
+                <div class="input-with-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="phone" class="form-control" required placeholder="+998 90 123 45 67">
+                </div>
             </div>
 
             <div class="form-group">
                 <label>Parol</label>
-                <input type="password" id="password" required placeholder="********">
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" class="form-control" required placeholder="********">
+                </div>
             </div>
 
             <div class="form-group">
-                <label>Profil rasmi</label>
-                <input type="file" id="profileImage" accept="image/*">
+                <label>Profil rasmi <span class="text-muted">(ixtiyoriy)</span></label>
+                <div class="file-upload-wrapper">
+                    <input type="file" id="profileImage" accept="image/*" class="form-control">
+                </div>
             </div>
 
             <div class="form-group">
@@ -84,35 +97,46 @@
         </div>
     </div>
 
+    <!-- SweetAlert2 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script>
+        // SweetAlert Custom Theme function
+        const showAlert = (icon, title, text) => {
+            Swal.fire({
+                icon: icon,
+                title: title,
+                text: text,
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#4f46e5',
+                customClass: {
+                    popup: 'glass-panel'
+                }
+            });
+        };
+
         // Add subject row
         document.getElementById('add-subject').addEventListener('click', () => {
             const container = document.getElementById('subjects-container');
             const newRow = document.createElement('div');
-            newRow.className = 'subject-row';
+            newRow.className = 'subject-row animate__animated animate__fadeInIn';
             newRow.innerHTML = `
-                <select class="subject-category">
-                    <option value="">Fan kategoriyasini tanlang</option>
+                <select class="subject-category form-control">
+                    <option value="">Kategoriya</option>
                     <option value="matematika">Matematika</option>
                     <option value="fizika">Fizika</option>
                     <option value="kimyo">Kimyo</option>
-                    <option value="biologiya">Biologiya</option>
                     <option value="ingliz_tili">Ingliz tili</option>
-                    <option value="tarix">Tarix</option>
-                    <option value="geografiya">Geografiya</option>
                     <option value="informatika">Informatika</option>
-                    <option value="ona_tili">Ona tili</option>
-                    <option value="adabiyot">Adabiyot</option>
                     <option value="boshqa">Boshqa</option>
                 </select>
-                <input type="text" class="custom-subject" placeholder="Fan nomi (agar boshqa tanlansa)" style="display:none;">
-                <select class="subject-level">
+                <input type="text" class="custom-subject form-control" placeholder="Fan nomi" style="display:none;">
+                <select class="subject-level form-control">
                     <option value="">Daraja</option>
-                    <option value="weak">Zaif</option>
-                    <option value="medium">O'rtacha</option>
-                    <option value="strong">Kuchli</option>
+                    <option value="weak">O'rganmoqchiman</option>
+                    <option value="strong">O'rgata olaman</option>
                 </select>
-                <button type="button" class="remove-subject" onclick="this.parentElement.remove()"><i class="fas fa-times"></i></button>
+                <button type="button" class="remove-subject" onclick="this.parentElement.remove()"><i class="fas fa-trash-alt"></i></button>
             `;
             container.appendChild(newRow);
         });
@@ -122,7 +146,7 @@
             if (e.target.classList.contains('subject-category')) {
                 const customInput = e.target.parentElement.querySelector('.custom-subject');
                 if (e.target.value === 'boshqa') {
-                    customInput.style.display = 'inline-block';
+                    customInput.style.display = 'block';
                 } else {
                     customInput.style.display = 'none';
                 }
@@ -133,7 +157,14 @@
         document.getElementById('registerForm').addEventListener('submit', async (e) => {
             e.preventDefault();
 
+            const btn = document.querySelector('.btn-submit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Yuklanmoqda...';
+            btn.disabled = true;
+
             const subjects = [];
+            let valid = true;
+
             document.querySelectorAll('.subject-row').forEach(row => {
                 const category = row.querySelector('.subject-category').value;
                 const level = row.querySelector('.subject-level').value;
@@ -146,8 +177,24 @@
                         level: level,
                         customSubject: category === 'boshqa' ? customSubject : undefined
                     });
+                } else if (category || level) {
+                    valid = false;
                 }
             });
+
+            if (!valid) {
+                showAlert('warning', 'Xatolik', 'Kiritilgan fanlar ro\'yxatida barcha maydonlarni to\'ldiring!');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
+
+            if (subjects.length === 0) {
+                showAlert('warning', 'Xatolik', 'Iltimos, kamida bitta fan kiriting!');
+                btn.innerHTML = originalText;
+                btn.disabled = false;
+                return;
+            }
 
             const formData = new FormData();
             formData.append('firstName', document.getElementById('firstName').value);
@@ -170,14 +217,27 @@
                 const data = await response.json();
 
                 if (response.ok) {
-                    alert('Ro\'yxatdan muvaffaqiyatli o\'tdingiz!');
-                    window.location.href = '/login.html';
+                    Swal.fire({
+                        icon: 'success',
+                        title: 'Ajoyib!',
+                        text: 'Ro\'yxatdan muvaffaqiyatli o\'tdingiz!',
+                        background: '#1e293b',
+                        color: '#fff',
+                        confirmButtonColor: '#4f46e5',
+                        timer: 2000,
+                        showConfirmButton: false
+                    }).then(() => {
+                        window.location.href = '/login.html';
+                    });
                 } else {
-                    alert(data.error || 'Xatolik yuz berdi');
+                    showAlert('error', 'Xatolik yuz berdi', data.error || 'Noma\'lum xatolik');
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Server bilan bog\'lanishda xatolik');
+                showAlert('error', 'Tarmoq xatosi', 'Server bilan bog\'lanishda xatolik yuz berdi. Internetni tekshiring.');
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
     </script>

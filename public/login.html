@@ -7,24 +7,34 @@
     <title>SkillSwap - Kirish</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
 </head>
 
 <body class="auth-page">
-    <div class="auth-container">
+    <div class="auth-container animate__animated animate__zoomIn">
         <div class="auth-header">
-            <h2>Kirish</h2>
-            <p>Telefon raqam va parolingiz bilan kiring</p>
+            <a href="/" class="back-link"><i class="fas fa-arrow-left"></i> Bosh sahifa</a>
+            <h2>Xush kelibsiz!</h2>
+            <p>Platformaga kirish uchun ma'lumotlarni kiriting</p>
         </div>
 
         <form id="loginForm">
             <div class="form-group">
                 <label>Telefon raqam</label>
-                <input type="tel" id="phone" required placeholder="+998 90 123 45 67">
+                <div class="input-with-icon">
+                    <i class="fas fa-phone"></i>
+                    <input type="tel" id="phone" class="form-control" required placeholder="+998 90 123 45 67">
+                </div>
             </div>
 
             <div class="form-group">
                 <label>Parol</label>
-                <input type="password" id="password" required placeholder="********">
+                <div class="input-with-icon">
+                    <i class="fas fa-lock"></i>
+                    <input type="password" id="password" class="form-control" required placeholder="********">
+                </div>
             </div>
 
             <button type="submit" class="btn-submit">Kirish</button>
@@ -35,9 +45,16 @@
         </div>
     </div>
 
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
     <script>
         document.getElementById('loginForm').addEventListener('submit', async (e) => {
             e.preventDefault();
+
+            const btn = document.querySelector('.btn-submit');
+            const originalText = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Kirilmoqda...';
+            btn.disabled = true;
 
             const phone = document.getElementById('phone').value;
             const password = document.getElementById('password').value;
@@ -55,13 +72,50 @@
 
                 if (response.ok) {
                     localStorage.setItem('user', JSON.stringify(data.user));
-                    window.location.href = '/dashboard.html';
+
+                    const Toast = Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 1500,
+                        timerProgressBar: true,
+                        background: '#1e293b',
+                        color: '#fff',
+                        didOpen: (toast) => {
+                            toast.addEventListener('mouseenter', Swal.stopTimer)
+                            toast.addEventListener('mouseleave', Swal.resumeTimer)
+                        }
+                    });
+
+                    Toast.fire({
+                        icon: 'success',
+                        title: 'Tizimga muvaffaqiyatli kirdingiz'
+                    }).then(() => {
+                        window.location.href = '/dashboard.html';
+                    });
                 } else {
-                    alert(data.error || 'Xatolik yuz berdi');
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Xatolik',
+                        text: data.error || 'Parol yoki login noto\'g\'ri',
+                        background: '#1e293b',
+                        color: '#fff',
+                        confirmButtonColor: '#4f46e5',
+                    });
                 }
             } catch (error) {
                 console.error('Error:', error);
-                alert('Server bilan bog\'lanishda xatolik');
+                Swal.fire({
+                    icon: 'error',
+                    title: 'Tarmoq xatosi',
+                    text: 'Server bilan bog\'lanishda xatolik yuz berdi',
+                    background: '#1e293b',
+                    color: '#fff',
+                    confirmButtonColor: '#4f46e5',
+                });
+            } finally {
+                btn.innerHTML = originalText;
+                btn.disabled = false;
             }
         });
     </script>
