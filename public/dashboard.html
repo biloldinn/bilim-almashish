@@ -7,6 +7,11 @@
     <title>SkillSwap - Dashboard</title>
     <link rel="stylesheet" href="/css/style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <!-- SweetAlert2 -->
+    <link href="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
+    <!-- AOS Animation CSS -->
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
 </head>
 
 <body>
@@ -21,7 +26,7 @@
         </nav>
     </header>
 
-    <div class="dashboard-container">
+    <div class="dashboard-container" data-aos="fade-up" data-aos-duration="800">
         <div id="matches" class="section active">
             <h2>Sizga mos topilganlar</h2>
             <div id="matchesList" class="matches-grid"></div>
@@ -67,8 +72,31 @@
         </div>
     </div>
 
+    <!-- SweetAlert2 and AOS JS -->
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.7.32/dist/sweetalert2.all.min.js"></script>
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
     <script src="/socket.io/socket.io.js"></script>
     <script>
+        // Init AOS
+        AOS.init({ once: true, offset: 50 });
+
+        // SweetAlert Helper functions
+        const showAlert = (icon, title, text) => {
+            Swal.fire({
+                icon: icon, title: title, text: text,
+                background: '#1e293b', color: '#fff',
+                confirmButtonColor: '#4f46e5',
+                customClass: { popup: 'glass-panel' }
+            });
+        };
+        const showToast = (icon, title) => {
+            const Toast = Swal.mixin({
+                toast: true, position: 'top-end', showConfirmButton: false, timer: 3000,
+                timerProgressBar: true, background: '#1e293b', color: '#fff'
+            });
+            Toast.fire({ icon, title });
+        };
+
         const user = JSON.parse(localStorage.getItem('user'));
         if (!user) {
             window.location.href = '/login.html';
@@ -107,19 +135,39 @@
 
         async function acceptMatch(matchId) {
             // Accept match logic
-            alert('Match accepted!');
+            showToast('success', 'Taklif qabul qilindi!');
         }
 
         async function rejectMatch(matchId) {
-            const response = await fetch('/api/reject-match', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ matchId })
+            Swal.fire({
+                title: 'Rad etmoqchimisiz?',
+                text: "Bu amalni ortga qaytarib bo'lmaydi!",
+                icon: 'warning',
+                showCancelButton: true,
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#4f46e5',
+                confirmButtonText: 'Ha, rad etish',
+                cancelButtonText: 'Bekor qilish',
+                customClass: { popup: 'glass-panel' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    try {
+                        const response = await fetch('/api/reject-match', {
+                            method: 'POST',
+                            headers: { 'Content-Type': 'application/json' },
+                            body: JSON.stringify({ matchId })
+                        });
+                        if (response.ok) {
+                            showToast('success', 'Taklif rad etildi');
+                            loadMatches();
+                        }
+                    } catch (err) {
+                        showToast('error', 'Xatolik yuz berdi');
+                    }
+                }
             });
-            if (response.ok) {
-                alert('Match rejected');
-                loadMatches();
-            }
         }
 
         // Chat functionality
@@ -142,7 +190,7 @@
         });
 
         socket.on('certificate_issued', (data) => {
-            alert('Sizga sertifikat berildi!');
+            showAlert('success', 'Tabriklaymiz!', 'Sizga sertifikat berildi!');
             loadCertificates();
         });
 
@@ -248,9 +296,24 @@
         });
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {
-            await fetch('/api/logout', { method: 'POST' });
-            localStorage.removeItem('user');
-            window.location.href = '/';
+            Swal.fire({
+                title: 'Tizimdan chiqmoqchimisiz?',
+                icon: 'question',
+                showCancelButton: true,
+                background: '#1e293b',
+                color: '#fff',
+                confirmButtonColor: '#ef4444',
+                cancelButtonColor: '#4f46e5',
+                confirmButtonText: 'Ha, chiqish',
+                cancelButtonText: 'Bekor qilish',
+                customClass: { popup: 'glass-panel' }
+            }).then(async (result) => {
+                if (result.isConfirmed) {
+                    await fetch('/api/logout', { method: 'POST' });
+                    localStorage.removeItem('user');
+                    window.location.href = '/';
+                }
+            });
         });
 
         // Initialize

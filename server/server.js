@@ -135,7 +135,7 @@ app.post('/api/register', upload.single('profileImage'), async (req, res) => {
         });
     } catch (error) {
         console.error('Registration error:', error);
-        res.status(500).json({ error: 'Server xatosi' });
+        res.status(500).json({ error: 'Server xatosi: ' + error.message });
     }
 });
 
@@ -173,7 +173,7 @@ app.post('/api/login', async (req, res) => {
         });
     } catch (error) {
         console.error('Login error:', error);
-        res.status(500).json({ error: 'Server xatosi' });
+        res.status(500).json({ error: 'Server xatosi: ' + error.message });
     }
 });
 
@@ -380,7 +380,7 @@ app.post('/api/generate-certificate', async (req, res) => {
         });
     } catch (error) {
         console.error('Certificate generation error:', error);
-        res.status(500).json({ error: 'Server xatosi' });
+        res.status(500).json({ error: 'Server xatosi: ' + error.message });
     }
 });
 
@@ -441,7 +441,7 @@ app.post('/api/accept-certificate', async (req, res) => {
         res.json({ message: 'Sertifikat qabul qilindi' });
     } catch (error) {
         console.error('Accept certificate error:', error);
-        res.status(500).json({ error: 'Server xatosi' });
+        res.status(500).json({ error: 'Server xatosi: ' + error.message });
     }
 });
 
@@ -457,7 +457,7 @@ app.post('/api/reject-match', async (req, res) => {
         res.json({ message: 'So\'rov rad etildi' });
     } catch (error) {
         console.error('Reject match error:', error);
-        res.status(500).json({ error: 'Server xatosi' });
+        res.status(500).json({ error: 'Server xatosi: ' + error.message });
     }
 });
 
