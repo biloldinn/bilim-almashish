@@ -27,10 +27,12 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, '../public')));
 app.use('/uploads', express.static(path.join(__dirname, '../public/uploads')));
 
+const dbUri = process.env.MONGODB_URI || 'mongodb+srv://bilol006:bilol006@cluster0.dcw67cz.mongodb.net/skillswap?appName=Cluster0';
+
 // Session configuration
-const sessionStore = process.env.MONGODB_URI ? MongoStore.create({
-    mongoUrl: process.env.MONGODB_URI
-}) : new session.MemoryStore();
+const sessionStore = MongoStore.create({
+    mongoUrl: dbUri
+});
 
 app.use(session({
     secret: process.env.SESSION_SECRET || 'secret',
@@ -72,7 +74,7 @@ const upload = multer({
 });
 
 // MongoDB connection
-mongoose.connect(process.env.MONGODB_URI)
+mongoose.connect(dbUri)
     .then(() => console.log('✅ MongoDB connected successfully'))
     .catch(err => console.error('❌ MongoDB connection error:', err));
 
