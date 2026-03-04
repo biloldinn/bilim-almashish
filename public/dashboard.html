@@ -59,15 +59,21 @@
         </div>
 
         <div id="profile" class="section">
-            <h2>Profil</h2>
-            <div class="profile-card">
-                <img id="profileImage" src="" alt="Profile">
-                <h3 id="profileName"></h3>
-                <p id="profilePhone"></p>
-                <p id="profileRole"></p>
-                <h4>Fanlarim:</h4>
-                <div id="profileSubjects"></div>
-                <button id="editProfileBtn">Profilni tahrirlash</button>
+            <h2 data-aos="fade-down">Mening Profilim</h2>
+            <div class="profile-wrapper" data-aos="zoom-in" data-aos-duration="1000">
+                <div class="profile-card">
+                    <img id="profileImage" src="" alt="Profile">
+                    <h3 id="profileName"></h3>
+                    <p id="profilePhone"></p>
+                    <p id="profileRole"></p>
+
+                    <h4><i class="fas fa-book-open"></i> Fanlarim</h4>
+                    <div id="profileSubjects"></div>
+
+                    <button id="editProfileBtn"><i class="fas fa-user-edit"></i> Profilni tahrirlash</button>
+                    <button id="logoutProfileBtn" class="logout-profile-btn"><i class="fas fa-sign-out-alt"></i>
+                        Tizimdan chiqish</button>
+                </div>
             </div>
         </div>
     </div>
@@ -109,33 +115,81 @@
 
         // Load matches
         async function loadMatches() {
-            // This would come from your API
-            const matches = [
-                {
-                    _id: '1',
-                    teacher: { firstName: 'Ali', lastName: 'Valiyev', profileImage: '/uploads/default-avatar.png' },
-                    student: { firstName: 'Olim', lastName: 'Komilov' },
-                    subject: { name: 'Matematika' },
-                    status: 'pending'
-                }
-            ];
+            try {
+                const response = await fetch('/api/matches');
+                if (!response.ok) return;
+                const matches = await response.json();
 
-            const matchesList = document.getElementById('matchesList');
-            matchesList.innerHTML = matches.map(match => `
-                <div class="match-card">
-                    <img src="${match.teacher?.profileImage || match.student?.profileImage || '/uploads/default-avatar.png'}" alt="">
-                    <h4>${match.teacher?.firstName || match.student?.firstName} ${match.teacher?.lastName || match.student?.lastName}</h4>
-                    <p>Fan: ${match.subject.name}</p>
-                    <p>Status: ${match.status}</p>
-                    <button onclick="acceptMatch('${match._id}')">Qabul qilish</button>
-                    <button onclick="rejectMatch('${match._id}')" class="reject">Rad etish</button>
-                </div>
-            `).join('');
+                const matchesList = document.getElementById('matchesList');
+                if (matches.length === 0) {
+                    matchesList.innerHTML = '<p class="text-muted" style="grid-column: 1 / -1; text-align: center; padding: 40px; font-size: 1.1rem;">Hozircha mos keluvchi o\'quvchi yoki o\'qituvchilar topilmadi. Biroz kuting...</p>';
+                    return;
+                }
+
+                matchesList.innerHTML = matches.map(match => {
+                    const isTeacher = match.teacher._id === user.id;
+                    const counterpart = isTeacher ? match.student : match.teacher;
+                    if (!counterpart) return '';
+
+                    const roleLabel = isTeacher ? "O'quvchi" : "O'qituvchi";
+
+                    let buttonsHtml = '';
+                    if (match.status === 'pending') {
+                        buttonsHtml = `
+                            <button onclick="acceptMatch('${match._id}')" style="background: rgba(16, 185, 129, 0.1); color: var(--success); border: 1px solid rgba(16, 185, 129, 0.3);"><i class="fas fa-check"></i> Qabul qilish</button>
+                            <button onclick="rejectMatch('${match._id}')" class="reject" style="background: rgba(239, 68, 68, 0.1); color: var(--danger); border: 1px solid rgba(239, 68, 68, 0.3);"><i class="fas fa-times"></i> Rad etish</button>
+                        `;
+                    } else if (match.status === 'accepted') {
+                        buttonsHtml = `<button onclick="startChat('${counterpart._id}', '${counterpart.firstName} ${counterpart.lastName}')" style="background: var(--gradient-primary); color: white; border: none; width: 100%; margin-top: 10px; font-size: 15px;"><i class="fas fa-comment"></i> Chatni boshlash</button>`;
+                    }
+
+                    let statusText = match.status === 'pending' ? 'Kutilmoqda...' : match.status === 'accepted' ? 'Qabul qilingan' : match.status;
+                    let statusColor = match.status === 'pending' ? 'var(--warning)' : match.status === 'accepted' ? 'var(--success)' : 'var(--danger)';
+
+                    return `
+                    <div class="match-card">
+                        <img src="${counterpart.profileImage || '/uploads/default-avatar.png'}" alt="">
+                        <h4>${counterpart.firstName} ${counterpart.lastName} <span style="font-size: 13px; color: var(--primary-light);">(${roleLabel})</span></h4>
+                        <p style="margin-top: 10px;">Fan: <strong>${match.subject.name}</strong></p>
+                        <p>Status: <span class="badge" style="background: transparent; color: ${statusColor}; border: 1px solid ${statusColor}; padding: 4px 12px; margin: 8px 0 0 0; font-size: 12px;">${statusText}</span></p>
+                        <div style="margin-top: 15px; display: flex; gap: 10px; flex-wrap: wrap;">${buttonsHtml}</div>
+                    </div>
+                `}).join('');
+            } catch (err) {
+                console.error(err);
+            }
         }
 
         async function acceptMatch(matchId) {
-            // Accept match logic
-            showToast('success', 'Taklif qabul qilindi!');
+            try {
+                const response = await fetch('/api/accept-match', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ matchId })
+                });
+                if (response.ok) {
+                    showToast('success', 'Taklif qabul qilindi!');
+                    loadMatches();
+                } else {
+                    showToast('error', 'Xatolik yuz berdi');
+                }
+            } catch (error) {
+                showToast('error', 'Tarmoq xatosi');
+            }
+        }
+
+        function startChat(userId, userName) {
+            currentChatUserId = userId;
+            document.getElementById('activeChat').style.display = 'flex';
+            document.getElementById('chatHeader').innerHTML = `<h3><i class="fas fa-user-circle"></i> ${userName} bilan chat</h3>`;
+            document.getElementById('chatMessages').innerHTML = '';
+
+            // Switch tabs visually
+            document.querySelectorAll('header nav a').forEach(l => l.classList.remove('active'));
+            document.querySelector('a[href="#chat"]').classList.add('active');
+
+            document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+            document.getElementById('chat').classList.add('active');
         }
 
         async function rejectMatch(matchId) {
@@ -293,6 +347,11 @@
                 document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
                 document.getElementById(link.getAttribute('href').substring(1)).classList.add('active');
             });
+        });
+
+        // Make logout work for the profile button as well
+        document.getElementById('logoutProfileBtn').addEventListener('click', async () => {
+            document.getElementById('logoutBtn').click();
         });
 
         document.getElementById('logoutBtn').addEventListener('click', async () => {

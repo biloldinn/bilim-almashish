@@ -446,6 +446,40 @@ app.post('/api/accept-certificate', async (req, res) => {
         res.status(500).json({ error: 'Server xatosi: ' + error.message });
     }
 });
+// Get matches for logged in user
+app.get('/api/matches', async (req, res) => {
+    try {
+        if (!req.session.userId) return res.status(401).json({ error: 'Auth failed' });
+
+        const matches = await Match.find({
+            $or: [{ teacher: req.session.userId }, { student: req.session.userId }]
+        }).populate('teacher', 'firstName lastName profileImage role')
+            .populate('student', 'firstName lastName profileImage role')
+            .populate('subject');
+
+        res.json(matches);
+    } catch (error) {
+        console.error('Get matches error:', error);
+        res.status(500).json({ error: 'Server xatosi: ' + error.message });
+    }
+});
+
+// Accept match
+app.post('/api/accept-match', async (req, res) => {
+    try {
+        if (!req.session.userId) return res.status(401).json({ error: 'Auth failed' });
+        const { matchId } = req.body;
+
+        const match = await Match.findByIdAndUpdate(matchId, {
+            status: 'accepted'
+        });
+
+        res.json({ message: 'So\'rov qabul qilindi' });
+    } catch (error) {
+        console.error('Accept match error:', error);
+        res.status(500).json({ error: 'Server xatosi: ' + error.message });
+    }
+});
 
 // Reject match
 app.post('/api/reject-match', async (req, res) => {
