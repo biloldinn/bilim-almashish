@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SkillSwap - Dashboard</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+    <header class="dashboard-header">
+        <div class="logo">SkillSwap</div>
+        <nav>
+            <a href="#matches" class="active">Mosliklar</a>
+            <a href="#chat">Chat</a>
+            <a href="#certificates">Sertifikatlar</a>
+            <a href="#profile">Profil</a>
+            <button id="logoutBtn">Chiqish</button>
+        </nav>
+    </header>
+
+    <div class="dashboard-container">
+        <div id="matches" class="section active">
+            <h2>Sizga mos topilganlar</h2>
+            <div id="matchesList" class="matches-grid"></div>
+        </div>
+
+        <div id="chat" class="section">
+            <div class="chat-container">
+                <div class="chat-sidebar">
+                    <h3>Chatlar</h3>
+                    <div id="chatList"></div>
+                </div>
+                <div class="chat-main" id="activeChat" style="display:none;">
+                    <div class="chat-header" id="chatHeader"></div>
+                    <div class="chat-messages" id="chatMessages"></div>
+                    <div class="chat-input">
+                        <input type="text" id="messageInput" placeholder="Xabar yozing...">
+                        <button id="sendMessageBtn"><i class="fas fa-paper-plane"></i></button>
+                        <button id="attachFileBtn"><i class="fas fa-paperclip"></i></button>
+                        <button id="sendLocationBtn"><i class="fas fa-map-marker-alt"></i></button>
+                        <button id="voiceMessageBtn"><i class="fas fa-microphone"></i></button>
+                        <button id="videoCallBtn"><i class="fas fa-video"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div id="certificates" class="section">
+            <h2>Sertifikatlarim</h2>
+            <div id="certificatesList"></div>
+        </div>
+
+        <div id="profile" class="section">
+            <h2>Profil</h2>
+            <div class="profile-card">
+                <img id="profileImage" src="" alt="Profile">
+                <h3 id="profileName"></h3>
+                <p id="profilePhone"></p>
+                <p id="profileRole"></p>
+                <h4>Fanlarim:</h4>
+                <div id="profileSubjects"></div>
+                <button id="editProfileBtn">Profilni tahrirlash</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const user = JSON.parse(localStorage.getItem('user'));
+        if (!user) {
+            window.location.href = '/login.html';
+        }
+
+        const socket = io();
+        let currentChatUserId = null;
+
+        socket.emit('user_online', user.id);
+
+        // Load matches
+        async function loadMatches() {
+            // This would come from your API
+            const matches = [
+                {
+                    _id: '1',
+                    teacher: { firstName: 'Ali', lastName: 'Valiyev', profileImage: '/uploads/default-avatar.png' },
+                    student: { firstName: 'Olim', lastName: 'Komilov' },
+                    subject: { name: 'Matematika' },
+                    status: 'pending'
+                }
+            ];
+
+            const matchesList = document.getElementById('matchesList');
+            matchesList.innerHTML = matches.map(match => `
+                <div class="match-card">
+                    <img src="${match.teacher?.profileImage || match.student?.profileImage || '/uploads/default-avatar.png'}" alt="">
+                    <h4>${match.teacher?.firstName || match.student?.firstName} ${match.teacher?.lastName || match.student?.lastName}</h4>
+                    <p>Fan: ${match.subject.name}</p>
+                    <p>Status: ${match.status}</p>
+                    <button onclick="acceptMatch('${match._id}')">Qabul qilish</button>
+                    <button onclick="rejectMatch('${match._id}')" class="reject">Rad etish</button>
+                </div>
+            `).join('');
+        }
+
+        async function acceptMatch(matchId) {
+            // Accept match logic
+            alert('Match accepted!');
+        }
+
+        async function rejectMatch(matchId) {
+            const response = await fetch('/api/reject-match', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ matchId })
+            });
+            if (response.ok) {
+                alert('Match rejected');
+                loadMatches();
+            }
+        }
+
+        // Chat functionality
+        socket.on('receive_message', (data) => {
+            if (data.senderId === currentChatUserId) {
+                displayMessage(data);
+            }
+        });
+
+        socket.on('receive_location', (data) => {
+            if (data.senderId === currentChatUserId) {
+                displayLocation(data.location);
+            }
+        });
+
+        socket.on('user_typing', (data) => {
+            if (data.senderId === currentChatUserId) {
+                // Show typing indicator
+            }
+        });
+
+        socket.on('certificate_issued', (data) => {
+            alert('Sizga sertifikat berildi!');
+            loadCertificates();
+        });
+
+        document.getElementById('sendMessageBtn').addEventListener('click', () => {
+            const message = document.getElementById('messageInput').value;
+            if (message && currentChatUserId) {
+                socket.emit('send_message', {
+                    senderId: user.id,
+                    receiverId: currentChatUserId,
+                    message,
+                    type: 'text'
+                });
+                displayMessage({ message, type: 'text', senderId: user.id });
+                document.getElementById('messageInput').value = '';
+            }
+        });
+
+        document.getElementById('sendLocationBtn').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition((position) => {
+                    const location = {
+                        lat: position.coords.latitude,
+                        lng: position.coords.longitude
+                    };
+                    socket.emit('send_location', {
+                        senderId: user.id,
+                        receiverId: currentChatUserId,
+                        location
+                    });
+                    displayLocation(location);
+                });
+            }
+        });
+
+        function displayMessage(data) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${data.senderId === user.id ? 'sent' : 'received'}`;
+
+            if (data.type === 'text') {
+                messageDiv.textContent = data.message;
+            } else if (data.type === 'image') {
+                messageDiv.innerHTML = `<img src="${data.fileUrl}" alt="Image" style="max-width:200px;">`;
+            } else if (data.type === 'voice') {
+                messageDiv.innerHTML = `<audio controls src="${data.fileUrl}"></audio>`;
+            } else if (data.type === 'video') {
+                messageDiv.innerHTML = `<video controls src="${data.fileUrl}" style="max-width:200px;"></video>`;
+            }
+
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight;
+        }
+
+        function displayLocation(location) {
+            const messagesDiv = document.getElementById('chatMessages');
+            const messageDiv = document.createElement('div');
+            messageDiv.className = 'message received';
+            messageDiv.innerHTML = `
+                <a href="https://www.google.com/maps?q=${location.lat},${location.lng}" target="_blank">
+                    <i class="fas fa-map-marker-alt"></i> Lokatsiyani ko'rish
+                </a>
+            `;
+            messagesDiv.appendChild(messageDiv);
+        }
+
+        document.getElementById('messageInput').addEventListener('input', () => {
+            socket.emit('typing', {
+                senderId: user.id,
+                receiverId: currentChatUserId,
+                isTyping: true
+            });
+        });
+
+        // Load certificates
+        async function loadCertificates() {
+            const certificatesList = document.getElementById('certificatesList');
+            certificatesList.innerHTML = '<p>Sertifikatlar yuklanmoqda...</p>';
+            // Load from API
+        }
+
+        // Load profile
+        document.getElementById('profileImage').src = user.profileImage || '/uploads/default-avatar.png';
+        document.getElementById('profileName').textContent = `${user.firstName} ${user.lastName}`;
+        document.getElementById('profilePhone').textContent = user.phone;
+        document.getElementById('profileRole').textContent = user.role === 'teacher' ? 'O\'qituvchi' :
+            user.role === 'student' ? 'O\'quvchi' : 'Ikkalasi';
+
+        const profileSubjects = document.getElementById('profileSubjects');
+        profileSubjects.innerHTML = user.subjects.map(s => `
+            <span class="subject-tag ${s.level}">${s.name} (${s.level === 'weak' ? 'Zaif' : s.level === 'medium' ? 'O\'rtacha' : 'Kuchli'})</span>
+        `).join('');
+
+        // Navigation
+        document.querySelectorAll('header nav a').forEach(link => {
+            link.addEventListener('click', (e) => {
+                e.preventDefault();
+                document.querySelectorAll('header nav a').forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+
+                document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+                document.getElementById(link.getAttribute('href').substring(1)).classList.add('active');
+            });
+        });
+
+        document.getElementById('logoutBtn').addEventListener('click', async () => {
+            await fetch('/api/logout', { method: 'POST' });
+            localStorage.removeItem('user');
+            window.location.href = '/';
+        });
+
+        // Initialize
+        loadMatches();
+        loadCertificates();
+    </script>
+</body>
+
+</html>

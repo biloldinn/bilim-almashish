@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="uz">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title> Bilim almashish platformasi</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+</head>
+
+<body>
+    <div id="splash">
+        <div class="splash-content">
+            <div class="logo-wrapper">
+                <i class="fas fa-graduation-cap fa-5x"></i>
+            </div>
+            <h1>SkillSwap</h1>
+        </div>
+    </div>
+
+    <div id="main-content" style="display:none;">
+        <header class="navbar">
+            <div class="logo">SkillSwap</div>
+            <nav>
+                <a href="#home">Bosh sahifa</a>
+                <a href="#about">Platforma haqida</a>
+                <a href="#how-it-works">Qanday ishlaydi</a>
+                <a href="/login.html" class="btn-login">Kirish</a>
+                <a href="/register.html" class="btn-register">Ro'yxatdan o'tish</a>
+            </nav>
+        </header>
+
+        <section id="home" class="hero">
+            <div class="hero-text">
+                <h1>Bilim almashish platformasi</h1>
+                <p>AI asosida o'quvchilar va o'qituvchilarni bog'lovchi zamonaviy ta'lim tizimi</p>
+                <a href="/register.html" class="cta-btn">Hozir boshlash</a>
+            </div>
+            <div class="hero-animation">
+                <div class="floating-card"><i class="fas fa-chalkboard-teacher fa-3x"></i></div>
+                <div class="floating-card"><i class="fas fa-users fa-3x"></i></div>
+                <div class="floating-card"><i class="fas fa-certificate fa-3x"></i></div>
+            </div>
+        </section>
+
+        <section id="about" class="about-section">
+            <h2>Platforma haqida</h2>
+            <div class="features">
+                <div class="feature-card">
+                    <i class="fas fa-robot fa-3x"></i>
+                    <h3>AI Matching</h3>
+                    <p>Sun'iy intellekt yordamida o'quvchilar va o'qituvchilarni avtomatik bog'laymiz</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-video fa-3x"></i>
+                    <h3>Video darslar</h3>
+                    <p>Onlayn video darslar va ovozli xabarlar orqali samarali o'qitish</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-map-marker-alt fa-3x"></i>
+                    <h3>Lokatsiya</h3>
+                    <p>Yaqin atrofdagi o'qituvchilar bilan bog'lanishingiz mumkin</p>
+                </div>
+                <div class="feature-card">
+                    <i class="fas fa-certificate fa-3x"></i>
+                    <h3>Sertifikatlar</h3>
+                    <p>Kursni tamomlaganingizdan so'ng rasmiy sertifikat oling</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="how-it-works" class="how-it-works">
+            <h2>Qanday ishlaydi?</h2>
+            <div class="steps">
+                <div class="step">
+                    <span class="step-number">1</span>
+                    <h3>Ro'yxatdan o'ting</h3>
+                    <p>Telefon raqamingiz orqali profil yarating va fanlar bo'yicha darajangizni belgilang</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">2</span>
+                    <h3>AI moslashtirish</h3>
+                    <p>Sun'iy intellekt sizga eng mos o'qituvchi yoki o'quvchini topadi</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">3</span>
+                    <h3>Darslarni boshlang</h3>
+                    <p>Chat, video qo'ng'iroq va lokatsiya orqali samarali o'rganing</p>
+                </div>
+                <div class="step">
+                    <span class="step-number">4</span>
+                    <h3>Sertifikat oling</h3>
+                    <p>Kursni tamomlab, rasmiy sertifikatga ega bo'ling</p>
+                </div>
+            </div>
+        </section>
+
+        <footer class="footer">
+            <div class="footer-container">
+                <div class="footer-about">
+                    <h3>SkillSwap</h3>
+                    <p>O'quvchilar va o'qituvchilar uchun AI asosidagi interaktiv ta'lim platformasi</p>
+                </div>
+                <div class="footer-links">
+                    <h4>Tez havolalar</h4>
+                    <ul>
+                        <li><a href="#home">Bosh sahifa</a></li>
+                        <li><a href="#about">Platforma haqida</a></li>
+                        <li><a href="#how-it-works">Qanday ishlaydi</a></li>
+                        <li><a href="/register.html">Ro'yxatdan o'tish</a></li>
+                    </ul>
+                </div>
+                <div class="footer-socials">
+                    <h4>Biz bilan bog'laning</h4>
+                    <div class="social-icons">
+                        <a href="#"><i class="fab fa-telegram"></i></a>
+                        <a href="#"><i class="fab fa-instagram"></i></a>
+                        <a href="#"><i class="fab fa-facebook"></i></a>
+                        <a href="#"><i class="fab fa-youtube"></i></a>
+                    </div>
+                </div>
+            </div>
+            <div class="footer-bottom">
+                <p>&copy; 2026 SkillSwap. Barcha huquqlar himoyalangan.</p>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        // Splash screen
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                document.getElementById('splash').style.display = 'none';
+                document.getElementById('main-content').style.display = 'block';
+            }, 2000);
+        });
+    </script>
+</body>
+
+</html>
